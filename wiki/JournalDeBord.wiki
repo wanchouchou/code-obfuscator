@@ -15,3 +15,4 @@
 
 ==13 octobre 2010==
   * Correction du cahier des charges
+  * Lecture du document reçu lors de la dernière séance
