@@ -12,3 +12,6 @@
 
 ==12 octobre 2010==
   * Réalisation d’une première version du cahier des charges
+
+==13 octobre 2010==
+  * Correction du cahier des charges
