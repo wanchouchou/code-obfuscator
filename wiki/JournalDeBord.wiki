@@ -1,14 +1,14 @@
 ==6 octobre 2010==
   * Lecture de documentation sur le format ELF
-    [http://infocenter.arm.com/help/topic/com.arm.doc.dui0101a/DUI0101A_Elf.pdf]
-    [http://refspecs.freestandards.org/elf/elf.pdf]
-    [http://www.skyfree.org/linux/references/ELF_Format.pdf]
+  [http://infocenter.arm.com/help/topic/com.arm.doc.dui0101a/DUI0101A_Elf.pdf]
+  [http://refspecs.freestandards.org/elf/elf.pdf]
+  [http://www.skyfree.org/linux/references/ELF_Format.pdf]
   * Lecture de documentation sur le langage assembleur ARM
-    [http://marine.edu.ups-tlse.fr/~rochange/ISI1A/PolycopARM.pdf]
+  [http://marine.edu.ups-tlse.fr/~rochange/ISI1A/PolycopARM.pdf]
   * Lecture de documentation sur des techniques d’obfuscation en assembleur 
-    [http://www.unixgarden.com/index.php/securite/techniques-dobfuscation-de-code%C2%A0-chiffrer-du-clair-avec-du-clair]
+  [http://www.unixgarden.com/index.php/securite/techniques-dobfuscation-de-code%C2%A0-chiffrer-du-clair-avec-du-clair]
   * Lecture de documentation sur le reverse engineering d’exécutables pour ARM
-    [http://www.codebreakers-journal.com/downloads/cbj/2006/CBM_3_1_2006_Fogie_Embedded_Reverse_Engineering.pdf]
+  [http://www.codebreakers-journal.com/downloads/cbj/2006/CBM_3_1_2006_Fogie_Embedded_Reverse_Engineering.pdf]
 
 ==12 octobre 2010==
   * Réalisation d’une première version du cahier des charges
