@@ -30,7 +30,7 @@
 
 
 ==3 octobre 2010==
-  * Désassemblage d'un simple programme c sur x86, étude du fichier éxecutable
+  * Désassemblage d'un simple programme c sur x86, étude du fichier exécutable
   [http://www.haypocalc.com/wiki/Vocabulaire_de_l'assembleur_Intel_x86]
   [http://www.commentcamarche.net/faq/9058-installer-un-emulateur-arm-gratuit]
   [http://www.thefreecountry.com/emulators/arm.shtml]
