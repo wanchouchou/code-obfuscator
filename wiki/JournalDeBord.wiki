@@ -38,3 +38,5 @@
 ==5 novembre 2010==
   * Installation d'un compilateur croisé linux-arm, étude d'un programme simple avec readelf et objdump
   [http://www.ibm.com/developerworks/linux/library/l-arm-toolchain/index.html?ca=drs-]
+  * Plus d'informations sur le format ELF
+  [http://www.ouah.org/RevEng/x430.htm]
