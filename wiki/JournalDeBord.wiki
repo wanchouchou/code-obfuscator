@@ -40,3 +40,8 @@
   [http://www.ibm.com/developerworks/linux/library/l-arm-toolchain/index.html?ca=drs-]
   * Plus d'informations sur le format ELF
   [http://www.ouah.org/RevEng/x430.htm]
+
+==10 novembre 2010==
+  * Manipulation de fichiers ELF avec gHex
+  * Essais avec la librairie elf.h
+  [http://www.student.cs.uwaterloo.ca/~cs350/common/os161-src-html/elf_8h.html]
