@@ -1,0 +1,34 @@
+ARM GAS  hw.S 			page 1
+
+
+   1              	@filename: hw.S
+   2              	
+   3              	.text
+   4              	.align 2
+   5              	.global _start
+   6              	
+   7              	@ ssize_t sys_write(unsigned int fd, const char * buf, size_t count)
+   8              	@         r7                 r0      r1                r2
+   9              	
+  10              	_start:
+  11 0000 18108FE2 	    adr     r1, msg         @ Address
+  12 0004 0100A0E3 	    mov     r0, #1          @ STDOUT
+  13 0008 1020A0E3 	    mov     r2, #16         @ Length
+  14 000c 0470A0E3 	    mov     r7, #4          @ sys_write
+  15 0010 000000EF 	    svc     0x00000000
+  16              	
+  17              	@ int sys_exit(int status)
+  18              	@     r7       r0
+  19              	
+  20 0014 0000A0E3 	    mov     r0, #0          @ Return code
+  21 0018 0170A0E3 	    mov     r7, #1          @ sys_exit
+  22 001c 000000EF 	    svc     0x00000000
+  23              	
+  24              	.align 2
+  25              	
+  26              	msg:
+  27 0020 48656C6C 	    .asciz "Hello Android!\n\n"
+  27      6F20416E 
+  27      64726F69 
+  27      64210A0A 
+  27      00000000 
