@@ -1,4 +1,4 @@
 ===Procès verbaux===
-*[https://code-obfuscator.googlecode.com/svn/trunk/pv_seance2.pdf Séance du 13.10.2010]
-*[https://code-obfuscator.googlecode.com/svn/trunk/pv_seance3.pdf Séance du 20.10.2010]
-*[https://code-obfuscator.googlecode.com/svn/trunk/pv_seance4.pdf Séance du 10.11.2010]
+[https://code-obfuscator.googlecode.com/svn/trunk/pv_seance2.pdf Séance du 13.10.2010]
+[https://code-obfuscator.googlecode.com/svn/trunk/pv_seance3.pdf Séance du 20.10.2010]
+[https://code-obfuscator.googlecode.com/svn/trunk/pv_seance4.pdf Séance du 10.11.2010]
