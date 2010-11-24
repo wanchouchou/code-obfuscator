@@ -45,3 +45,8 @@
   * Manipulation de fichiers ELF avec gHex
   * Essais avec la librairie elf.h
   [http://www.student.cs.uwaterloo.ca/~cs350/common/os161-src-html/elf_8h.html]
+
+==17-19 novembre 2010==
+  * Manipulation de fichiers ELF avec gHex (suite)
+  * Essai de l'outil strip pour enlever les infos de debug
+  * Codage en C d'une application pouvant afficher en hexadécimal le contenu d'un fichier binaire
