@@ -9,10 +9,10 @@ int main(int argc, char *argv[]){
    /*variable declaration  */
    FILE *filePtr;
    int size;
-   unsigned int *buffer;
+   unsigned char *buffer;
    unsigned long fileLen;
    char *filename;
-   char i;
+   int i;
 
    /*open file */
    filename = argv[1];
@@ -25,23 +25,31 @@ int main(int argc, char *argv[]){
    /*get file length */
    fseek(filePtr, 0, SEEK_END);
    fileLen=ftell(filePtr);
+   printf("fileLen: %ld\n", fileLen);
    fseek(filePtr, 0, SEEK_SET);
 
    /*allocate memory */
-   buffer=(char *)malloc(fileLen+1);
+   buffer=malloc(fileLen+1);
+
    if(!buffer){
       fprintf(stderr, "Memory error!");
       fclose(filePtr);
 		return;
 	}
 
-   /*read file contents into buffer */
+
+   /*read file content into buffer */
    fread(buffer, fileLen, 1, filePtr);
 
-   /*manipulate buffer*/
-   for(i=0; i<sizeof(buffer); i++){
-      printf("%x", ((char *)buffer)[i]);
+   /*manipulate buffer (display content)*/
+   for(i=1; i<=fileLen; i++){
+      printf("%02x", buffer[i-1]);
+      if(i%16==0 && i!=0)
+         printf("\n",i);
+      else if(i%2==0 && i!=0)
+         printf(" ");
    }
+   printf("\n");
    fclose(filePtr);
    free(buffer);
    return 0;
