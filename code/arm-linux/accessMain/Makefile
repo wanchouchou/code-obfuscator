@@ -9,7 +9,7 @@ endif
 
 CC:=$(CROSS_COMPILE)gcc
 CFLAGS:=-c -Wall
-EXEC=accessMain
+EXEC=obfuscator
 
 all:	
 	$(CC) $(EXEC).c -o $(EXEC)
