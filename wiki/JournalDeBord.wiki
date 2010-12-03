@@ -50,3 +50,15 @@
   * Manipulation de fichiers ELF avec gHex (suite)
   * Essai de l'outil strip pour enlever les infos de debug
   * Codage en C d'une application pouvant afficher en hexadécimal le contenu d'un fichier binaire
+
+==24 novembre 2010==
+  * Manipulation de fichiers ELF avec gHex (suite)
+  * Recherche sur structure fichier ELF
+  * Modifications du main et de pointeurs dans un exécutable
+  * Modification du programme pour écrire dans un/plusieurs fichier(s)
+
+==01-03 décembre 2010==
+  * Détermination de tous les champs qui se modifient lors de l'agrandissement du main depuis le code source
+  * Ajouter des NOP dans un fichier ELF (intel) sans créer de problèmes du pointeurs, mais le programme tourne à l'infini
+  * Essais de memes manipulations sur exécutables ARM
+  * Modification du notre programme 
