@@ -31,7 +31,7 @@
 #define SCT_COMMENT  19
 #define SCT_ARM_ATTRIBUTES 20
 #define SCT_SHSTRTAB   21
-
+#define NB_SHDR   21
 
 int main(int argc, char *argv[]){
 
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]){
    int i,j;                      // iterator to browse the executable
    Elf32_Ehdr elfHdr;            // elf header of the executable
    Elf32_Shdr strtabShdr, tmpShdr; // 
-   unsigned int shdrOffset[21];
+   Elf32_Shdr *shdrPtr[NB_SHDR];
    Elf32_Word strtabIndex, strtabStart;
    unsigned char secTest;  // 
    char *shdrNames[] = {".interp", ".hash", ".dynsym", ".dynstr", ".rel.plt", ".init", 
@@ -111,15 +111,15 @@ int main(int argc, char *argv[]){
       fread(strPtr, 1, 15, tmpFilePtr);   // read the string (15 bytes)
       for(j=0;j<sizeof(shdrNames)/sizeof(int);j++){
          if(!strcmp(strPtr, shdrNames[j])){  // compare the string with the array of strings shdrNames
-            shdrOffset[j]=elfHdr.e_shoff+i*sizeof(Elf32_Shdr); // save the offset
-            printf("%d The section header %s is at address %04x\n", j, shdrNames[j], shdrOffset[j]);
+            fwrite(shdrPtr[j], sizeof(Elf32_Shdr), 1, tmpFilePtr); // save the header into the array of section headers
+            //printf("%d The section header %s is at address %04x\n", j, shdrNames[j], shdrOffset[j]);
          }
       }
       
    }  
-   fseek(tmpFilePtr, shdrOffset[SCT_DYNSYM], SEEK_SET);
+   /*fseek(tmpFilePtr, shdrOffset[SCT_DYNSYM], SEEK_SET);
    fread(&tmpShdr, sizeof(char), sizeof(Elf32_Shdr), tmpFilePtr);
-   printf("dynsym at 0x%04x\n", tmpShdr.sh_offset);
+   printf("dynsym at 0x%04x\n", tmpShdr.sh_offset);*/
    
    /* close files and delete the temporary file */
    printf("\n");
