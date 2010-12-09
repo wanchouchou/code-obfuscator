@@ -1,0 +1,10 @@
+http://www.technovelty.org/code/debug-info.html
+http://kerneltrap.org/mailarchive/git-commits-head/2008/12/19/4454904
+http://sourceware.org/gdb/onlinedocs/gdb/Separate-Debug-Files.html
+http://www.cygwin.com/ml/binutils/2007-07/msg00012.html
+http://www.odulo.fr/temp_/format-elf
+http://blogs.sun.com/ali/entry/gnu_hash_elf_sections
+http://labmaster.mi.infn.it/Laboratorio2/CompilerCD/clang/l1/ELF.html
+http://www.tortall.net/projects/yasm/manual/html/objfmt-elf-section.html
+http://infocenter.arm.com/help/topic/com.arm.doc.dui0101a/DUI0101A_Elf.pdf
+
