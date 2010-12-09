@@ -53,7 +53,6 @@ int main(int argc, char *argv[]){
                         ".fini_array", ".jcr", ".dynamic", ".got", ".data", ".bss", 
                         ".comment", ".ARM.attributes", ".shstrtab"};
    strPtr=malloc(15);
-
    /* open executable file */
    exeFilename = argv[1];
    exeFilePtr = fopen(exeFilename,"rb");
@@ -111,15 +110,14 @@ int main(int argc, char *argv[]){
       fread(strPtr, 1, 15, tmpFilePtr);   // read the string (15 bytes)
       for(j=0;j<sizeof(shdrNames)/sizeof(int);j++){
          if(!strcmp(strPtr, shdrNames[j])){  // compare the string with the array of strings shdrNames
-            fwrite(shdrPtr[j], sizeof(Elf32_Shdr), 1, tmpFilePtr); // save the header into the array of section headers
+            //*(shdrPtr[j]->sh_name)=tmpShdr.sh_name; // save the header into the array of section headers
+            memcpy(shdrPtr[j], &tmpShdr, sizeof(tmpShdr));
             //printf("%d The section header %s is at address %04x\n", j, shdrNames[j], shdrOffset[j]);
          }
       }
       
    }  
-   /*fseek(tmpFilePtr, shdrOffset[SCT_DYNSYM], SEEK_SET);
-   fread(&tmpShdr, sizeof(char), sizeof(Elf32_Shdr), tmpFilePtr);
-   printf("dynsym at 0x%04x\n", tmpShdr.sh_offset);*/
+  // printf("shdrPtr[SCT_DYNSYM].sh_offset=%04x\n",*shdrPtr[SCT_DYNSYM]);
    
    /* close files and delete the temporary file */
    printf("\n");
