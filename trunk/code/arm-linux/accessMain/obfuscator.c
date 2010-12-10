@@ -33,7 +33,13 @@
 #define SCT_SHSTRTAB   21
 #define NB_SHDR   21
 
+char *shdrNames[] = {".interp", ".hash", ".dynsym", ".dynstr", ".rel.plt", ".init", 
+                        ".plt", ".text", ".fini", ".rodata", ".eh_frame", ".init_array", 
+                        ".fini_array", ".jcr", ".dynamic", ".got", ".data", ".bss", 
+                        ".comment", ".ARM.attributes", ".shstrtab"};
+
 int main(int argc, char *argv[]){
+   Elf32_Shdr *shdrPtr[NB_SHDR];
 
    /* variable declaration */
    FILE *exeFilePtr;             // pointer on the executable file
@@ -45,14 +51,10 @@ int main(int argc, char *argv[]){
    int i,j;                      // iterator to browse the executable
    Elf32_Ehdr elfHdr;            // elf header of the executable
    Elf32_Shdr strtabShdr, tmpShdr; // 
-   Elf32_Shdr *shdrPtr[NB_SHDR];
    Elf32_Word strtabIndex, strtabStart;
    unsigned char secTest;  // 
-   char *shdrNames[] = {".interp", ".hash", ".dynsym", ".dynstr", ".rel.plt", ".init", 
-                        ".plt", ".text", ".fini", ".rodata", ".eh_frame", ".init_array", 
-                        ".fini_array", ".jcr", ".dynamic", ".got", ".data", ".bss", 
-                        ".comment", ".ARM.attributes", ".shstrtab"};
    strPtr=malloc(15);
+
    /* open executable file */
    exeFilename = argv[1];
    exeFilePtr = fopen(exeFilename,"rb");
@@ -110,14 +112,12 @@ int main(int argc, char *argv[]){
       fread(strPtr, 1, 15, tmpFilePtr);   // read the string (15 bytes)
       for(j=0;j<sizeof(shdrNames)/sizeof(int);j++){
          if(!strcmp(strPtr, shdrNames[j])){  // compare the string with the array of strings shdrNames
-            //*(shdrPtr[j]->sh_name)=tmpShdr.sh_name; // save the header into the array of section headers
-            memcpy(shdrPtr[j], &tmpShdr, sizeof(tmpShdr));
-            //printf("%d The section header %s is at address %04x\n", j, shdrNames[j], shdrOffset[j]);
+            shdrPtr[j]=(Elf32_Shdr*)malloc(sizeof(Elf32_Shdr));
+            memcpy((void *)shdrPtr[j], (void *)(&tmpShdr), sizeof(Elf32_Shdr));
+            printf("%d The section %s is at offset %04x\n", j, shdrNames[j], shdrPtr[j]->sh_offset);
          }
       }
-      
    }  
-  // printf("shdrPtr[SCT_DYNSYM].sh_offset=%04x\n",*shdrPtr[SCT_DYNSYM]);
    
    /* close files and delete the temporary file */
    printf("\n");
@@ -125,6 +125,8 @@ int main(int argc, char *argv[]){
    fclose(tmpFilePtr);
    free(tmpBuffer);
    free(strPtr);
+   for(j=0;j<sizeof(shdrNames)/sizeof(int);j++)
+      free(shdrPtr[j]);
    remove("tmp");
    return 0;
 } 
