@@ -37,6 +37,7 @@ char *shdrNames[] = {".interp", ".hash", ".dynsym", ".dynstr", ".rel.plt", ".ini
                         ".plt", ".text", ".fini", ".rodata", ".eh_frame", ".init_array", 
                         ".fini_array", ".jcr", ".dynamic", ".got", ".data", ".bss", 
                         ".comment", ".ARM.attributes", ".shstrtab"};
+unsigned long fileLength;     // length of the executable
 
 int main(int argc, char *argv[]){
    Elf32_Shdr *shdrPtr[NB_SHDR];
@@ -45,9 +46,8 @@ int main(int argc, char *argv[]){
    FILE *exeFilePtr;             // pointer on the executable file
    FILE *tmpFilePtr;             // pointer on the temporary file                      
    unsigned char *exeFilename;   // name of the executable file
-   unsigned char *strPtr;        //
+   unsigned char *strPtr;        // char pointer to verify the section names
    unsigned char *tmpBuffer;     // char pointer on the temporary buffer
-   unsigned long fileLength;     // length of the executable
    int i,j;                      // iterator to browse the executable
    Elf32_Ehdr elfHdr;            // elf header of the executable
    Elf32_Shdr strtabShdr, tmpShdr; // 
