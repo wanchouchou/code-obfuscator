@@ -62,3 +62,10 @@
   * Ajouter de NOPs dans un fichier ELF (intel) sans créer de problèmes de pointeurs, mais le programme tourne à l'infini
   * Essais de mêmes manipulations sur exécutables ARM
   * Modification du notre programme pour effectuer tous les changements automatiquement...(en cours)
+
+==05-10 décembre 2010==
+  * Etablissement d'une structure du fichier ELF
+  * Modifications du code: sauvegarde des entêtes de sections dans des structures
+
+==13-14 décembre 2010==
+  * Code: modifications des adresses et offsets situés dans chaque section
