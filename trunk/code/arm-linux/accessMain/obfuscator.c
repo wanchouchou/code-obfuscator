@@ -7,7 +7,8 @@
 #include "obfuscator.h"
 
 FILE *exeFilePtr;             // pointer on the executable file
-FILE *tmpFilePtr;             // pointer on the temporary file                      
+FILE *tmpFilePtr;             // pointer on the temporary file
+FILE *endFilePtr;             // pointer on the modified file                      
 unsigned char *tmpBuffer;     // char pointer on the temporary buffer
 unsigned long fileLength;     // length of the executable
 unsigned char *strPtr;        // char pointer to verify the section names
@@ -17,11 +18,30 @@ Elf32_Ehdr elfHdr;            // elf header of the executable
 
 /* injects code into the file at a given offset */
 void injectCode(Elf32_Off offset, Elf32_Word *hexcode){
-   unsigned char *ptr;
+
+   /* copy content to end file */
    int i;
-   fseek(tmpFilePtr, offset, SEEK_SET);
-   for(i=0;i<codeLength;i++)
-      fwrite((Elf32_Word*)&(hexcode[i]), sizeof(Elf32_Word), 1, tmpFilePtr);
+   fseek(tmpFilePtr, 0, SEEK_SET);
+   for(i=0; i<offset/BLOCK_SIZE; i++){ // copy first part of file
+      fread(tmpBuffer, BLOCK_SIZE, 1, tmpFilePtr);
+      fwrite(tmpBuffer, BLOCK_SIZE, 1, endFilePtr);
+   }
+   if(offset%BLOCK_SIZE!=0){
+      fread(tmpBuffer, offset%BLOCK_SIZE, 1, tmpFilePtr);
+      fwrite(tmpBuffer, offset%BLOCK_SIZE, 1, endFilePtr);
+   }
+
+   for(i=0;i<codeLength/sizeof(Elf32_Word);i++)  // copy code
+      fwrite((Elf32_Word*)&(hexcode[i]), sizeof(Elf32_Word), 1, endFilePtr);
+
+   for(i=0; i<(fileLength-offset)/BLOCK_SIZE; i++){   // copy rest of file
+      fread(tmpBuffer, BLOCK_SIZE, 1, tmpFilePtr);
+      fwrite(tmpBuffer, BLOCK_SIZE, 1, endFilePtr);
+   }
+   if((fileLength-offset)%BLOCK_SIZE!=0){
+      fread(tmpBuffer, (fileLength-offset)%BLOCK_SIZE, 1, tmpFilePtr);
+      fwrite(tmpBuffer, (fileLength-offset)%BLOCK_SIZE, 1, endFilePtr);
+   }
 }
 
 /* updates offsets and pointers */
@@ -116,9 +136,60 @@ void updateShdr(unsigned int insertOff, unsigned int insertAddr){
    }
 }
 
-/* creates a tmp file */
+/* recherche main */
+unsigned int searchMain (){
+	unsigned int location;
+	int i;
+	unsigned int *buffer;
+	int nbEntries;
+	unsigned int offset;
+	offset = shdrPtr[SCT_TEXT]->sh_offset;
+	nbEntries = shdrPtr[SCT_TEXT]->sh_size;
+	nbEntries = nbEntries/4;
+   	buffer=malloc(4);	
+	for(i=0; i<nbEntries; i++){
+		fseek(tmpFilePtr, offset, SEEK_SET);
+		fread(buffer, sizeof(int), 1, tmpFilePtr);
+		if(*buffer==0xe1a0c00d)
+		{
+			location=offset;
+		}
+	offset+=4; 
+	}
+	return location;
+}
+
+/* updates offsets and pointers of the .text section */
+void updateText (unsigned int offset, unsigned int insertOff, unsigned int insertAddr){
+	int nbEntries;
+	nbEntries = shdrPtr[SCT_TEXT]->sh_size;
+	nbEntries = nbEntries/4; //on parcourt 4 bytes par 4 
+	int i;
+	unsigned int *buffer;
+	unsigned int mainLocation;
+	mainLocation = searchMain();
+   	buffer=malloc(4);	
+	for(i=0; i<nbEntries; i++){
+		fseek(tmpFilePtr, offset, SEEK_SET);
+		fread(buffer, sizeof(int), 1, tmpFilePtr);
+		if(
+		((*buffer>(insertOff+0x10000)) && (*buffer<(fileLength+0x10000))) || 
+		((*buffer>insertAddr) && (*buffer<insertAddr+fileLength))||
+		((*buffer>0xe59f0000) && (*buffer<0xe59fffff) && (offset>mainLocation))
+		)
+		{
+			*buffer+=codeLength;
+			fseek(tmpFilePtr, offset, SEEK_SET);
+			fwrite(buffer, sizeof(int), 1, tmpFilePtr);
+		}
+	offset+=4;
+	}
+}
+
+
+/* create necessary files and allocate memory */
 int prepareFiles(unsigned char *exeFilename){
-   
+
    /* open executable file */
    exeFilePtr = fopen(exeFilename,"rb");
    if(!exeFilePtr){
@@ -133,7 +204,15 @@ int prepareFiles(unsigned char *exeFilename){
      return 0;
    }
 
-   /* get the length of executable file  */
+   /* create end file */
+   remove("obf");
+   endFilePtr = fopen("obf","w+b");
+   if(!endFilePtr){
+     fprintf(stderr, "Unable to create end file!\n");
+     return 0;
+   }
+
+   /* get the length of executable file */
    fseek(exeFilePtr, 0, SEEK_END);
    fileLength = ftell(exeFilePtr);
    fseek(exeFilePtr, 0, SEEK_SET);
@@ -159,15 +238,15 @@ int prepareFiles(unsigned char *exeFilename){
    return 1;
 }
 
+/* copy all section headers to structures */
 void copyShdrs(void){
    
    /* variable declaration */
-   Elf32_Shdr strtabShdr, tmpShdr;
-   Elf32_Word strtabIndex, strtabStart;
-   strPtr=malloc(15);
-
-   /* copy all section headers to structures */
+   Elf32_Shdr strtabShdr, tmpShdr;  // string table section header, temporary section header
+   Elf32_Word strtabIndex, strtabStart;   // string table index, string table start offset
    int i,j; // iterator to browse the executable
+
+   /* fill the structures */
    fseek(tmpFilePtr, 0, SEEK_SET);
    fread(&elfHdr, 1, sizeof(Elf32_Ehdr), tmpFilePtr);
    if (elfHdr.e_shoff == 0) {
@@ -183,6 +262,7 @@ void copyShdrs(void){
       fread(&tmpShdr, sizeof(char), sizeof(Elf32_Shdr), tmpFilePtr);   // copy it in a temporary section header
       strtabIndex=tmpShdr.sh_name;  // save the index of the string table 
       fseek(tmpFilePtr, strtabStart+strtabIndex, SEEK_SET); // jump to the string table
+      strPtr=malloc(15); // allocate space for the string pointer
       fread(strPtr, 1, 15, tmpFilePtr);   // read the string (15 bytes)
       for(j=0;j<sizeof(shdrNames)/sizeof(int);j++){
          if(!strcmp(strPtr, shdrNames[j])){  // compare the string with the array of strings shdrNames
@@ -198,18 +278,20 @@ void copyShdrs(void){
 void closeFiles(){
    fclose(exeFilePtr);
    fclose(tmpFilePtr);
+   fclose(endFilePtr);
    free(tmpBuffer);
    free(strPtr);
    int i;
    for(i=0;i<sizeof(shdrNames)/sizeof(int);i++)
       free(shdrPtr[i]);
-   //remove("tmp");
+   remove("tmp");
 }
 
 
 int main(int argc, char *argv[]){
+
    /* variable declaration */
-   Elf32_Word hexcode[8]={0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff};
+   Elf32_Word hexcode[8]={0xe51b3010, 0xe2833001, 0xe50b3010, 0xe51b2010, 0xe1a03002, 0xe1a03083, 0xe0833002, 0xe50b3010};
    codeLength=sizeof(hexcode)/sizeof(Elf32_Word);
    int mainOff=0x418, mainAddr=0x8418;
 
@@ -221,6 +303,7 @@ int main(int argc, char *argv[]){
       updatePlt(shdrPtr[SCT_PLT]->sh_offset, mainOff, mainAddr);
       updateDynamic(shdrPtr[SCT_DYNAMIC]->sh_offset, mainOff, mainAddr);
       updateGot(shdrPtr[SCT_GOT]->sh_offset, mainOff, mainAddr);
+      updateText(shdrPtr[SCT_TEXT]->sh_offset, mainOff, mainAddr);
       updatePhdr(elfHdr.e_phoff, mainOff, mainAddr);
       updateElfHdr();
       updateShdr(mainOff, mainAddr);
