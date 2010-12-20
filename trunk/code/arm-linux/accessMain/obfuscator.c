@@ -277,7 +277,7 @@ void copyShdrs(void){
          if(!strcmp(strPtr, shdrNames[j])){  // compare the string with the array of strings shdrNames
             shdrPtr[j]=(Elf32_Shdr*)malloc(sizeof(Elf32_Shdr));   // allocate memory for each section header
             memcpy((void *)shdrPtr[j], (void *)(&tmpShdr), sizeof(Elf32_Shdr));  // copy each section header
-            printf("%d section %s of size %04x at offset %04x\n", j, shdrNames[j], shdrPtr[j]->sh_size, shdrPtr[j]->sh_offset);
+            //printf("%d section %s of size %04x at offset %04x\n", j, shdrNames[j], shdrPtr[j]->sh_size, shdrPtr[j]->sh_offset);
          }
       }
    }  
