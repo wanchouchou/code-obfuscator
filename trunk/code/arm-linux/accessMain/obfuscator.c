@@ -1,4 +1,4 @@
-it #include <stdio.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -92,14 +92,29 @@ void updateDynamic (unsigned int offset, unsigned int insertOff, unsigned int in
 	updateFct (offset, insertOff, insertAddr, 8, size);
 }
 
-/* updates offsets and pointers of the .plt section */
+/* updates offsets and pointers of the .plt section*/
 void updatePlt (unsigned int offset, unsigned int insertOff, unsigned int insertAddr){
-	int size;
-	size = shdrPtr[SCT_PLT]->sh_size;
-	size = (size-8)/8;
-	offset+=16; 
-	updateFct (offset, insertOff, insertAddr, 12, size);
-}
+	int nbEntries;
+	nbEntries = shdrPtr[SCT_PLT]->sh_size;
+	nbEntries = nbEntries/4; 
+	int i;
+	unsigned int *buffer;
+	buffer=malloc(4);
+	for(i=0; i<nbEntries; i++){
+		fseek(tmpFilePtr, offset, SEEK_SET);
+		fread(buffer, sizeof(int), 1, tmpFilePtr);
+		if( 
+		((*buffer>0x8000) && (*buffer<0x8fff))||
+		((*buffer>0xe5bcf000) && (*buffer<0xe5bcffff))
+		)
+		{
+			*buffer+=codeLength;
+			fseek(tmpFilePtr, offset, SEEK_SET);
+			fwrite(buffer, sizeof(int), 1, tmpFilePtr);
+		}
+	offset+=4;
+	}
+} 
 
 /* updates offsets and pointers of the program header */
 void updatePhdr(unsigned int offset, unsigned int insertOff, unsigned int insertAddr){
