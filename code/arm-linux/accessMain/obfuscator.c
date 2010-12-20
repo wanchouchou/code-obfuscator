@@ -1,4 +1,4 @@
-#include <stdio.h>
+it #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <fcntl.h>
@@ -136,7 +136,7 @@ void updateShdr(unsigned int insertOff, unsigned int insertAddr){
    }
 }
 
-/* recherche main */
+/* search main method */
 unsigned int searchMain (){
 	unsigned int location;
 	int i;
@@ -153,10 +153,11 @@ unsigned int searchMain (){
 		if(*buffer==0xe1a0c00d)
 		{
 			location=offset;
+	      return location;
 		}
 	offset+=4; 
 	}
-	return location;
+   return 0;
 }
 
 /* updates offsets and pointers of the .text section */
@@ -268,7 +269,7 @@ void copyShdrs(void){
          if(!strcmp(strPtr, shdrNames[j])){  // compare the string with the array of strings shdrNames
             shdrPtr[j]=(Elf32_Shdr*)malloc(sizeof(Elf32_Shdr));   // allocate memory for each section header
             memcpy((void *)shdrPtr[j], (void *)(&tmpShdr), sizeof(Elf32_Shdr));  // copy each section header
-            //printf("%d section %s size %04x offset %04x\n", j, shdrNames[j], shdrPtr[j]->sh_size, shdrPtr[j]->sh_offset);
+            printf("%d section %s of size %04x at offset %04x\n", j, shdrNames[j], shdrPtr[j]->sh_size, shdrPtr[j]->sh_offset);
          }
       }
    }  
