@@ -22,11 +22,11 @@ void injectCode(Elf32_Off offset, Elf32_Word *hexcode){
    /* copy content to end file */
    int i;
    fseek(tmpFilePtr, 0, SEEK_SET);
-   for(i=0; i<offset/BLOCK_SIZE; i++){ // copy first part of file
+   for(i=0; i<offset/BLOCK_SIZE; i++){ // copy first part of file by chunks of 1024 bytes
       fread(tmpBuffer, BLOCK_SIZE, 1, tmpFilePtr);
       fwrite(tmpBuffer, BLOCK_SIZE, 1, endFilePtr);
    }
-   if(offset%BLOCK_SIZE!=0){
+   if(offset%BLOCK_SIZE!=0){ // copy the last non 1024 byte long chunk
       fread(tmpBuffer, offset%BLOCK_SIZE, 1, tmpFilePtr);
       fwrite(tmpBuffer, offset%BLOCK_SIZE, 1, endFilePtr);
    }
@@ -48,7 +48,7 @@ void injectCode(Elf32_Off offset, Elf32_Word *hexcode){
 void updateFct (unsigned int offset, unsigned int insertOff, unsigned int insertAddr, char jump, int nbEntries){
 	int i;
 	unsigned int *buffer;
-   buffer=malloc(4);	
+   buffer=malloc(sizeof(int));	
 	for(i=0; i<nbEntries; i++){
 		fseek(tmpFilePtr, offset, SEEK_SET);
 		fread(buffer, sizeof(int), 1, tmpFilePtr);
@@ -63,19 +63,17 @@ void updateFct (unsigned int offset, unsigned int insertOff, unsigned int insert
 
 /* updates offsets and pointers of the .dynsym section */
 void updateDynsym (unsigned int offset, unsigned int insertOff, unsigned int insertAddr){
-	int size;
-	size = shdrPtr[SCT_DYNSYM]->sh_size;
-	size = size/16;
-	offset+=4; 
-	updateFct (offset, insertOff, insertAddr, 16, size);
+	int nbEntries; // number of .dynsym entries
+	nbEntries = shdrPtr[SCT_DYNSYM]->sh_size/DYNSYM_ENTRY_SIZE;
+	offset+=4;  // the first offset to change is 4 bytes into the .dynsym section
+	updateFct (offset, insertOff, insertAddr, DYNSYM_ENTRY_SIZE, nbEntries);
 }
 
-/* updates offsets and pionters of the .relplt section */
+/* updates offsets and pointers of the .relplt section */
 void updateRelPlt (unsigned int offset, unsigned int insertOff, unsigned int insertAddr){
-	int size;
-	size = shdrPtr[SCT_REL_PLT]->sh_size;
-	size = size/8; 
-	updateFct (offset, insertOff, insertAddr, 8, size);
+	int nbEntries; // number of .relplt entries
+	nbEntries = shdrPtr[SCT_REL_PLT]->sh_size/REL_PLT_ENTRY_SIZE; 
+	updateFct (offset, insertOff, insertAddr, REL_PLT_ENTRY_SIZE, nbEntries);
 }
 
 /* updates offsets and pointers of the .got section */
@@ -85,32 +83,29 @@ void updateGot (unsigned int offset, unsigned int insertOff, unsigned int insert
 
 /* updates offsets and pointers of the .dynamic section */
 void updateDynamic (unsigned int offset, unsigned int insertOff, unsigned int insertAddr){
-	int size;
-	size = shdrPtr[SCT_DYNAMIC]->sh_size;
-	size = (size-12)/8;
-	offset+=12; 
-	updateFct (offset, insertOff, insertAddr, 8, size);
+	int nbEntries; // number of .dynamic entries
+	nbEntries = (shdrPtr[SCT_DYNAMIC]->sh_size-12)/DYNAMIC_ENTRY_SIZE;
+	offset+=12;  // the first offset to change is 4 bytes into the .dynamic section
+	updateFct (offset, insertOff, insertAddr, DYNAMIC_ENTRY_SIZE, nbEntries);
 }
 
 /* updates offsets and pointers of the .plt section*/
 void updatePlt (unsigned int offset, unsigned int insertOff, unsigned int insertAddr){
-	int nbEntries;
-	nbEntries = shdrPtr[SCT_PLT]->sh_size;
-	nbEntries = nbEntries/4; 
+	int nbEntries; // number of .plt entries
 	int i;
 	unsigned int *buffer;
+	nbEntries = shdrPtr[SCT_PLT]->sh_size/4; 
 	buffer=malloc(4);
 	for(i=0; i<nbEntries; i++){
 		fseek(tmpFilePtr, offset, SEEK_SET);
+      // check if it is an address and if it is after the insertion address
 		fread(buffer, sizeof(int), 1, tmpFilePtr);
-		if( 
-		((*buffer>0x8000) && (*buffer<0x8fff))||
-		((*buffer>0xe5bcf000) && (*buffer<0xe5bcffff))
-		)
+		if(((*buffer>0x8000) && (*buffer<0x8fff)) ||
+		((*buffer>0xe5bcf000) && (*buffer<0xe5bcffff)))
 		{
-			*buffer+=codeLength;
+			*buffer+=codeLength; // increment the address
 			fseek(tmpFilePtr, offset, SEEK_SET);
-			fwrite(buffer, sizeof(int), 1, tmpFilePtr);
+			fwrite(buffer, sizeof(int), 1, tmpFilePtr); // write to the file
 		}
 	offset+=4;
 	}
@@ -119,9 +114,9 @@ void updatePlt (unsigned int offset, unsigned int insertOff, unsigned int insert
 /* updates offsets and pointers of the program header */
 void updatePhdr(unsigned int offset, unsigned int insertOff, unsigned int insertAddr){
    int hdrSize, nbEntries;
-   hdrSize=shdrPtr[SCT_INTERP]->sh_offset-52;
-   nbEntries=hdrSize/4;
-   updateFct (offset, insertOff, insertAddr, 4, nbEntries);
+   hdrSize=shdrPtr[SCT_INTERP]->sh_offset-elfHdr.e_ehsize;
+   nbEntries=hdrSize/sizeof(int);
+   updateFct (offset, insertOff, insertAddr, sizeof(int), nbEntries);
 }
 
 /* updates offsets and pointers of the elf header */
@@ -132,16 +127,16 @@ void updateElfHdr(){
    fwrite(&newShoff, sizeof(Elf32_Addr), 1, tmpFilePtr);
 }
 
-/* updates offsets and pointers of the section headers section */
+/* updates offsets and pointers of the section headers */
 void updateShdr(unsigned int insertOff, unsigned int insertAddr){
    int i;
-   shdrPtr[SCT_TEXT]->sh_size+=codeLength;
+   shdrPtr[SCT_TEXT]->sh_size+=codeLength; // update the size attribute
    fseek(tmpFilePtr, elfHdr.e_shoff+(SCT_TEXT+1)*sizeof(Elf32_Shdr), SEEK_SET);
    fwrite(shdrPtr[SCT_TEXT], sizeof(Elf32_Shdr), 1, tmpFilePtr);
    
    for(i=SCT_FINI; i<sizeof(shdrNames)/sizeof(int); i++){
       fseek(tmpFilePtr, elfHdr.e_shoff+(i+1)*sizeof(Elf32_Shdr), SEEK_SET);
-      if(shdrPtr[i]->sh_addr>insertAddr){
+      if(shdrPtr[i]->sh_addr>insertAddr){ // increments the address if it after 
          shdrPtr[i]->sh_addr+=codeLength;
       }
       if(shdrPtr[i]->sh_offset>insertOff){
@@ -159,13 +154,12 @@ unsigned int searchMain (){
 	int nbEntries;
 	unsigned int offset;
 	offset = shdrPtr[SCT_TEXT]->sh_offset;
-	nbEntries = shdrPtr[SCT_TEXT]->sh_size;
-	nbEntries = nbEntries/4;
+	nbEntries = shdrPtr[SCT_TEXT]->sh_size/4;
    	buffer=malloc(4);	
 	for(i=0; i<nbEntries; i++){
 		fseek(tmpFilePtr, offset, SEEK_SET);
 		fread(buffer, sizeof(int), 1, tmpFilePtr);
-		if(*buffer==0xe1a0c00d)
+		if(*buffer==MAIN_SEQ)
 		{
 			location=offset;
 	      return location;
@@ -175,30 +169,29 @@ unsigned int searchMain (){
    return 0;
 }
 
-/* updates offsets and pointers of the .text section */
+/* updates offsets/pointers/instructions of the .text section */
 void updateText (unsigned int offset, unsigned int insertOff, unsigned int insertAddr){
-	int nbEntries;
-	nbEntries = shdrPtr[SCT_TEXT]->sh_size;
-	nbEntries = nbEntries/4; //on parcourt 4 bytes par 4 
-	int i;
+	unsigned int nbEntries;
+	unsigned int i;
 	unsigned int *buffer;
 	unsigned int mainLocation;
+	nbEntries = shdrPtr[SCT_TEXT]->sh_size/ARM_INSTRUCTION_SIZE; 
 	mainLocation = searchMain();
-   	buffer=malloc(4);	
+   buffer=malloc(ARM_INSTRUCTION_SIZE);	
 	for(i=0; i<nbEntries; i++){
 		fseek(tmpFilePtr, offset, SEEK_SET);
 		fread(buffer, sizeof(int), 1, tmpFilePtr);
 		if(
-		((*buffer>(insertOff+0x10000)) && (*buffer<(fileLength+0x10000))) || 
+		((*buffer>(insertOff+OFFSET_ID)) && (*buffer<(fileLength+OFFSET_ID))) || 
 		((*buffer>insertAddr) && (*buffer<insertAddr+fileLength))||
-		((*buffer>0xe59f0000) && (*buffer<0xe59fffff) && (offset>mainLocation))
+		((*buffer>LDR_START) && (*buffer<LDR_STOP) && (offset>mainLocation))
 		)
 		{
 			*buffer+=codeLength;
 			fseek(tmpFilePtr, offset, SEEK_SET);
 			fwrite(buffer, sizeof(int), 1, tmpFilePtr);
 		}
-	offset+=4;
+	offset+=ARM_INSTRUCTION_SIZE;
 	}
 }
 
@@ -260,7 +253,7 @@ void copyShdrs(void){
    /* variable declaration */
    Elf32_Shdr strtabShdr, tmpShdr;  // string table section header, temporary section header
    Elf32_Word strtabIndex, strtabStart;   // string table index, string table start offset
-   int i,j; // iterator to browse the executable
+   int i,j; // iterators to browse the executable
 
    /* fill the structures */
    fseek(tmpFilePtr, 0, SEEK_SET);
