@@ -271,8 +271,8 @@ void copyShdrs(void){
       fread(&tmpShdr, sizeof(char), sizeof(Elf32_Shdr), tmpFilePtr);   // copy it in a temporary section header
       strtabIndex=tmpShdr.sh_name;  // save the index of the string table 
       fseek(tmpFilePtr, strtabStart+strtabIndex, SEEK_SET); // jump to the string table
-      strPtr=malloc(15); // allocate space for the string pointer
-      fread(strPtr, 1, 15, tmpFilePtr);   // read the string (15 bytes)
+      strPtr=malloc(MAX_STRING_SIZE); // allocate space for the string pointer
+      fread(strPtr, 1, MAX_STRING_SIZE, tmpFilePtr);   // read the string (15 bytes)
       for(j=0;j<sizeof(shdrNames)/sizeof(int);j++){
          if(!strcmp(strPtr, shdrNames[j])){  // compare the string with the array of strings shdrNames
             shdrPtr[j]=(Elf32_Shdr*)malloc(sizeof(Elf32_Shdr));   // allocate memory for each section header
