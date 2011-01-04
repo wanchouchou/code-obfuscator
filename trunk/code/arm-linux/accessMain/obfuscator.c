@@ -271,8 +271,8 @@ void copyShdrs(void){
       fread(&tmpShdr, sizeof(char), sizeof(Elf32_Shdr), tmpFilePtr);   // copy it in a temporary section header
       strtabIndex=tmpShdr.sh_name;  // save the index of the string table 
       fseek(tmpFilePtr, strtabStart+strtabIndex, SEEK_SET); // jump to the string table
-      strPtr=malloc(MAX_STRING_SIZE); // allocate space for the string pointer
-      fread(strPtr, 1, MAX_STRING_SIZE, tmpFilePtr);   // read the string (15 bytes)
+      strPtr=malloc(15); // allocate space for the string pointer
+      fread(strPtr, 1, 15, tmpFilePtr);   // read the string (15 bytes)
       for(j=0;j<sizeof(shdrNames)/sizeof(int);j++){
          if(!strcmp(strPtr, shdrNames[j])){  // compare the string with the array of strings shdrNames
             shdrPtr[j]=(Elf32_Shdr*)malloc(sizeof(Elf32_Shdr));   // allocate memory for each section header
@@ -281,6 +281,23 @@ void copyShdrs(void){
          }
       }
    }  
+}
+
+void updateSct(int mainOff, int mainAddr){
+      updateDynsym (shdrPtr[SCT_DYNSYM]->sh_offset, mainOff, mainAddr);
+      updateRelPlt (shdrPtr[SCT_REL_PLT]->sh_offset, mainOff, mainAddr);
+      updatePlt(shdrPtr[SCT_PLT]->sh_offset, mainOff, mainAddr);
+      updateDynamic(shdrPtr[SCT_DYNAMIC]->sh_offset, mainOff, mainAddr);
+      updateGot(shdrPtr[SCT_GOT]->sh_offset, mainOff, mainAddr);
+      updateText(shdrPtr[SCT_TEXT]->sh_offset, mainOff, mainAddr);
+      updatePhdr(elfHdr.e_phoff, mainOff, mainAddr);
+      updateElfHdr();
+      updateShdr(mainOff, mainAddr);
+}
+
+unsigned int obfuscateFct(){
+   
+   return 3;
 }
 
 /* close files and delete the temporary file */
@@ -300,23 +317,15 @@ void closeFiles(){
 int main(int argc, char *argv[]){
 
    /* variable declaration */
-   Elf32_Word hexcode[8]={0xe51b3010, 0xe2833001, 0xe50b3010, 0xe51b2010, 0xe1a03002, 0xe1a03083, 0xe0833002, 0xe50b3010};
-   codeLength=sizeof(hexcode)/sizeof(Elf32_Word);
-   int mainOff=0x418, mainAddr=0x8418;
+   int mainOff, mainAddr;
 
    if(prepareFiles(argv[1])){
       copyShdrs();
-      codeLength=0x20;
-      updateDynsym (shdrPtr[SCT_DYNSYM]->sh_offset, mainOff, mainAddr);
-      updateRelPlt (shdrPtr[SCT_REL_PLT]->sh_offset, mainOff, mainAddr);
-      updatePlt(shdrPtr[SCT_PLT]->sh_offset, mainOff, mainAddr);
-      updateDynamic(shdrPtr[SCT_DYNAMIC]->sh_offset, mainOff, mainAddr);
-      updateGot(shdrPtr[SCT_GOT]->sh_offset, mainOff, mainAddr);
-      updateText(shdrPtr[SCT_TEXT]->sh_offset, mainOff, mainAddr);
-      updatePhdr(elfHdr.e_phoff, mainOff, mainAddr);
-      updateElfHdr();
-      updateShdr(mainOff, mainAddr);
-      injectCode(mainOff, hexcode);
+      mainOff=searchMain();
+      mainAddr=ADDR_ID+mainOff;
+      codeLength=obfuscateFct();
+      if (codeLength!=0)
+         updateSct(mainOff, mainAddr);
       closeFiles();
       return 0;
    }
