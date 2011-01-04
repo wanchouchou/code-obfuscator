@@ -118,7 +118,7 @@ Disassembly of section .text:
     8404:	e50b3014 	str	r3, [fp, #-20]
     8408:	e51b2018 	ldr	r2, [fp, #-24]
     840c:	e51b3014 	ldr	r3, [fp, #-20]
-    8410:	e0223003 	eor	r3, r2, r3
+    8410:	e0023003 	and	r3, r2, r3
     8414:	e50b3010 	str	r3, [fp, #-16]
     8418:	e3a03000 	mov	r3, #0	; 0x0
     841c:	e1a00003 	mov	r0, r3
