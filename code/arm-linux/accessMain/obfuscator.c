@@ -146,6 +146,7 @@ void updateShdr(unsigned int insertOff, unsigned int insertAddr){
    }
 }
 
+
 /* search main method */
 unsigned int searchMain (){
 	unsigned int location;
@@ -277,12 +278,13 @@ void copyShdrs(void){
          if(!strcmp(strPtr, shdrNames[j])){  // compare the string with the array of strings shdrNames
             shdrPtr[j]=(Elf32_Shdr*)malloc(sizeof(Elf32_Shdr));   // allocate memory for each section header
             memcpy((void *)shdrPtr[j], (void *)(&tmpShdr), sizeof(Elf32_Shdr));  // copy each section header
-            //printf("%d section %s of size %04x at offset %04x\n", j, shdrNames[j], shdrPtr[j]->sh_size, shdrPtr[j]->sh_offset);
+            printf("%d section %s of size %04x at offset %04x\n", j, shdrNames[j], shdrPtr[j]->sh_size, shdrPtr[j]->sh_offset);
          }
       }
    }  
 }
 
+/* updates all of the sections by calling every update function*/
 void updateSct(int mainOff, int mainAddr){
       updateDynsym (shdrPtr[SCT_DYNSYM]->sh_offset, mainOff, mainAddr);
       updateRelPlt (shdrPtr[SCT_REL_PLT]->sh_offset, mainOff, mainAddr);
@@ -295,8 +297,39 @@ void updateSct(int mainOff, int mainAddr){
       updateShdr(mainOff, mainAddr);
 }
 
-unsigned int obfuscateFct(){
+/* transforms every CMP rx, #0 instruction into an AND */
+void obfuscateCMP(){
+	unsigned int nbInstr;
+	unsigned int i;
+	unsigned int *buffer;
+	unsigned int mainLocation;
+   unsigned int tmp;
+	mainLocation = searchMain();
+	nbInstr = ((shdrPtr[SCT_FINI]->sh_offset)-mainLocation)/ARM_INSTRUCTION_SIZE;
+   printf("%x\n", nbInstr);
+   buffer=malloc(ARM_INSTRUCTION_SIZE);	
+	for(i=0; i<nbInstr; i++){
+		fseek(tmpFilePtr, mainLocation, SEEK_SET);
+		fread(buffer, sizeof(int), 1, tmpFilePtr);
+      if((*buffer&0xfff0ffff)==0xe3500000){
+         tmp=0x000f0000&*buffer;
+         *buffer=0xe0000000+tmp+(tmp>>4)+(tmp>>16);
+         printf("%x\n",*buffer);
+		}
+	mainLocation+=ARM_INSTRUCTION_SIZE;
+	}
+}
+
+void obfuscateMOV(){
    
+
+
+
+}
+
+
+unsigned int obfuscateFct(){
+   obfuscateCMP();
    return 3;
 }
 
@@ -323,14 +356,13 @@ int main(int argc, char *argv[]){
       copyShdrs();
       mainOff=searchMain();
       mainAddr=ADDR_ID+mainOff;
-      codeLength=obfuscateFct();
+      codeLength=16;
       if (codeLength!=0)
          updateSct(mainOff, mainAddr);
       closeFiles();
       return 0;
    }
-   else{
+   else
       fprintf(stderr, "The program was interrupted!\n");
-   }
 } 
 
