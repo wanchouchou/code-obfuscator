@@ -1,0 +1,140 @@
+
+program-while:     file format elf32-littlearm
+
+Disassembly of section .text:
+
+00008370 <_start>:
+    8370:	e3a0b000 	mov	fp, #0	; 0x0
+    8374:	e3a0e000 	mov	lr, #0	; 0x0
+    8378:	e49d1004 	pop	{r1}		; (ldr r1, [sp], #4)
+    837c:	e1a0200d 	mov	r2, sp
+    8380:	e52d2004 	push	{r2}		; (str r2, [sp, #-4]!)
+    8384:	e52d0004 	push	{r0}		; (str r0, [sp, #-4]!)
+    8388:	e59fc010 	ldr	ip, [pc, #16]	; 83a0 <_start+0x30>
+    838c:	e52dc004 	push	{ip}		; (str ip, [sp, #-4]!)
+    8390:	e59f000c 	ldr	r0, [pc, #12]	; 83a4 <_start+0x34>
+    8394:	e59f300c 	ldr	r3, [pc, #12]	; 83a8 <_start+0x38>
+    8398:	eaffffe8 	b	8340 <_init+0x24>
+    839c:	ebffffea 	bl	834c <_init+0x30>
+    83a0:	000084bc 	strheq	r8, [r0], -ip
+    83a4:	0000843c 	andeq	r8, r0, ip, lsr r4
+    83a8:	0000831c 	andeq	r8, r0, ip, lsl r3
+
+000083ac <_call_via_r0>:
+    83ac:	4700      	bx	r0
+    83ae:	46c0      	nop			(mov r8, r8)
+
+000083b0 <_call_via_r1>:
+    83b0:	4708      	bx	r1
+    83b2:	46c0      	nop			(mov r8, r8)
+
+000083b4 <_call_via_r2>:
+    83b4:	4710      	bx	r2
+    83b6:	46c0      	nop			(mov r8, r8)
+
+000083b8 <_call_via_r3>:
+    83b8:	4718      	bx	r3
+    83ba:	46c0      	nop			(mov r8, r8)
+
+000083bc <_call_via_r4>:
+    83bc:	4720      	bx	r4
+    83be:	46c0      	nop			(mov r8, r8)
+
+000083c0 <_call_via_r5>:
+    83c0:	4728      	bx	r5
+    83c2:	46c0      	nop			(mov r8, r8)
+
+000083c4 <_call_via_r6>:
+    83c4:	4730      	bx	r6
+    83c6:	46c0      	nop			(mov r8, r8)
+
+000083c8 <_call_via_r7>:
+    83c8:	4738      	bx	r7
+    83ca:	46c0      	nop			(mov r8, r8)
+
+000083cc <_call_via_r8>:
+    83cc:	4740      	bx	r8
+    83ce:	46c0      	nop			(mov r8, r8)
+
+000083d0 <_call_via_r9>:
+    83d0:	4748      	bx	r9
+    83d2:	46c0      	nop			(mov r8, r8)
+
+000083d4 <_call_via_sl>:
+    83d4:	4750      	bx	sl
+    83d6:	46c0      	nop			(mov r8, r8)
+
+000083d8 <_call_via_fp>:
+    83d8:	4758      	bx	fp
+    83da:	46c0      	nop			(mov r8, r8)
+
+000083dc <_call_via_ip>:
+    83dc:	4760      	bx	ip
+    83de:	46c0      	nop			(mov r8, r8)
+
+000083e0 <_call_via_sp>:
+    83e0:	4768      	bx	sp
+    83e2:	46c0      	nop			(mov r8, r8)
+
+000083e4 <_call_via_lr>:
+    83e4:	4770      	bx	lr
+    83e6:	46c0      	nop			(mov r8, r8)
+
+000083e8 <__do_global_dtors_aux>:
+    83e8:	e59f2010 	ldr	r2, [pc, #16]	; 8400 <__do_global_dtors_aux+0x18>
+    83ec:	e5d23000 	ldrb	r3, [r2]
+    83f0:	e3530000 	cmp	r3, #0	; 0x0
+    83f4:	02833001 	addeq	r3, r3, #1	; 0x1
+    83f8:	05c23000 	strbeq	r3, [r2]
+    83fc:	e12fff1e 	bx	lr
+    8400:	000105d4 	.word	0x000105d4
+
+00008404 <frame_dummy>:
+    8404:	e59f0028 	ldr	r0, [pc, #40]	; 8434 <frame_dummy+0x30>
+    8408:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+    840c:	e5903000 	ldr	r3, [r0]
+    8410:	e24dd004 	sub	sp, sp, #4	; 0x4
+    8414:	e3530000 	cmp	r3, #0	; 0x0
+    8418:	0a000003 	beq	842c <frame_dummy+0x28>
+    841c:	e59f3014 	ldr	r3, [pc, #20]	; 8438 <frame_dummy+0x34>
+    8420:	e3530000 	cmp	r3, #0	; 0x0
+    8424:	0a000000 	beq	842c <frame_dummy+0x28>
+    8428:	e12fff33 	blx	r3
+    842c:	e28dd004 	add	sp, sp, #4	; 0x4
+    8430:	e8bd8000 	pop	{pc}
+    8434:	000104ec 	.word	0x000104ec
+    8438:	00000000 	.word	0x00000000
+
+0000843c <main>:
+    843c:	e1a0c00d 	mov	ip, sp
+    8440:	e92dd800 	push	{fp, ip, lr, pc}
+    8444:	e24cb004 	sub	fp, ip, #4	; 0x4
+    8448:	e24dd010 	sub	sp, sp, #16	; 0x10
+    844c:	e50b0018 	str	r0, [fp, #-24]
+    8450:	e50b101c 	str	r1, [fp, #-28]
+    8454:	e59f0054 	ldr	r0, [pc, #84]	; 84b0 <main+0x74>
+    8458:	ebffffc1 	bl	8364 <_init+0x48>
+    845c:	e3a03005 	mov	r3, #5	; 0x5
+    8460:	e50b3010 	str	r3, [fp, #-16]
+    8464:	e59f0048 	ldr	r0, [pc, #72]	; 84b4 <main+0x78>
+    8468:	e51b1010 	ldr	r1, [fp, #-16]
+    846c:	ebffffb9 	bl	8358 <_init+0x3c>
+    8470:	ea000005 	b	848c <main+0x50>
+    8474:	e51b3010 	ldr	r3, [fp, #-16]
+    8478:	e2433001 	sub	r3, r3, #1	; 0x1
+    847c:	e50b3010 	str	r3, [fp, #-16]
+    8480:	e59f002c 	ldr	r0, [pc, #44]	; 84b4 <main+0x78>
+    8484:	e51b1010 	ldr	r1, [fp, #-16]
+    8488:	ebffffb2 	bl	8358 <_init+0x3c>
+    848c:	e51b3010 	ldr	r3, [fp, #-16]
+    8490:	e0033003 	and	r3, r3, r3
+    8494:	1afffff6 	bne	8474 <main+0x38>
+    8498:	e59f0018 	ldr	r0, [pc, #24]	; 84b8 <main+0x7c>
+    849c:	ebffffb0 	bl	8364 <_init+0x48>
+    84a0:	e3a03000 	mov	r3, #0	; 0x0
+    84a4:	e1a00003 	mov	r0, r3
+    84a8:	e24bd00c 	sub	sp, fp, #12	; 0xc
+    84ac:	e89da800 	ldm	sp, {fp, sp, pc}
+    84b0:	000084cc 	.word	0x000084cc
+    84b4:	000084d4 	.word	0x000084d4
+    84b8:	000084dc 	.word	0x000084dc
