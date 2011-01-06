@@ -58,7 +58,6 @@ void insertInstr(unsigned int *instr, unsigned int offset){
    /* copy content to temporary main file */
    fseek(mainFilePtr, 0, SEEK_SET);
    for(i=0; i<offset/BLOCK_SIZE; i++){
-      printf("passe\n");
       fread(tmpBuffer, BLOCK_SIZE, 1, mainFilePtr);
       fwrite(tmpBuffer, BLOCK_SIZE, 1, tmpMainPtr);
    }
@@ -78,17 +77,21 @@ void insertInstr(unsigned int *instr, unsigned int offset){
       fread(tmpBuffer, (mainSize-offset)%BLOCK_SIZE, 1, mainFilePtr);
       fwrite(tmpBuffer, (mainSize-offset)%BLOCK_SIZE, 1, tmpMainPtr);
    }
+   mainSize+=ARM_INSTRUCTION_SIZE;
+
    fseek(tmpMainPtr, 0, SEEK_SET);
-   /*for(i=0; i<mainSize/BLOCK_SIZE; i++){
+   fseek(mainFilePtr, 0, SEEK_SET);
+   for(i=0; i<mainSize/BLOCK_SIZE; i++){
       fread(tmpBuffer, BLOCK_SIZE, 1, tmpMainPtr);
       fwrite(tmpBuffer, BLOCK_SIZE, 1, mainFilePtr);
    }
    if(mainSize%BLOCK_SIZE!=0){
-      fread(tmpBuffer, offset%BLOCK_SIZE, 1, tmpMainPtr);
-      fwrite(tmpBuffer, offset%BLOCK_SIZE, 1, mainFilePtr);
-   }*/
+      fread(tmpBuffer, mainSize%BLOCK_SIZE, 1, tmpMainPtr);
+      fwrite(tmpBuffer, mainSize%BLOCK_SIZE, 1, mainFilePtr);
+   }
+   fseek(mainFilePtr, offset, SEEK_SET);
    fclose(tmpMainPtr);
-   //remove("tmpMain");
+   remove("tmpMain");
 }
 
 /* updates offsets and pointers */
@@ -341,7 +344,7 @@ void copyShdrs(void){
          if(!strcmp(strPtr, shdrNames[j])){  // compare the string with the array of strings shdrNames
             shdrPtr[j]=(Elf32_Shdr*)malloc(sizeof(Elf32_Shdr));   // allocate memory for each section header
             memcpy((void *)shdrPtr[j], (void *)(&tmpShdr), sizeof(Elf32_Shdr));  // copy each section header
-            printf("%d section %s of size %04x at offset %04x\n", j, shdrNames[j], shdrPtr[j]->sh_size, shdrPtr[j]->sh_offset);
+            //printf("%d section %s of size %04x at offset %04x\n", j, shdrNames[j], shdrPtr[j]->sh_size, shdrPtr[j]->sh_offset);
          }
       }
    }  
@@ -385,24 +388,26 @@ unsigned int obfuscateMOV(){
 	unsigned int nbInstr;
 	unsigned int i;
 	unsigned int *buffer1, *buffer2;
-   unsigned int param1, param2, param3;
+   unsigned int param1, param2;
    unsigned int insertedBytes;
+   unsigned int position;
+   position=0;
    insertedBytes=0;
 	nbInstr = mainSize/ARM_INSTRUCTION_SIZE;
    buffer1=malloc(ARM_INSTRUCTION_SIZE);	
    buffer2=malloc(ARM_INSTRUCTION_SIZE);
    fseek(mainFilePtr, 0, SEEK_SET);
-	for(i=0; i<nbInstr; i++){
-		fread(buffer1, sizeof(int), 1, mainFilePtr);
+	for(i=0; i<(nbInstr+insertedBytes/ARM_INSTRUCTION_SIZE); i++){
+		fread(buffer1, ARM_INSTRUCTION_SIZE, 1, mainFilePtr);
+      position+=4;
       if((*buffer1&0xffff0ff0)==0xe1a00000){
          param1=0x0000f000 & *buffer1;
          param2=0x0000000f & *buffer1;
-         param3=0xffff0000 & *buffer1;
-         *buffer1=param3+param1;
-         *buffer2=param3+(param2<<12);
+         *buffer1=0xe52d0000+param1;
+         *buffer2=0xe49d0000+(param2<<12);
          fseek(mainFilePtr, -4, SEEK_CUR);
          fwrite(buffer1, ARM_INSTRUCTION_SIZE, 1, mainFilePtr);
-         insertInstr(buffer2, SEEK_CUR);
+         insertInstr(buffer2, position);
          insertedBytes+=4;
 		}
 	}
@@ -434,11 +439,9 @@ void closeFiles(){
 }
 
 void extractMain(){
-
    int i;
-   
    mainSize=shdrPtr[SCT_FINI]->sh_offset-searchMain();
-   printf("fini %x , mainsize %x, searchmain %x\n", shdrPtr[SCT_FINI]->sh_offset, mainSize, searchMain());
+
    /* copy content to temporary file */
    fseek(exeFilePtr, searchMain(), SEEK_SET);
    for(i=0; i<mainSize/BLOCK_SIZE; i++){
