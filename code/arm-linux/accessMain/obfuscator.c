@@ -76,14 +76,14 @@ void insertInstr(unsigned int *instr, unsigned int offset){
       fwrite(tmpBuffer, (mainSize-offset)%BLOCK_SIZE, 1, tmpMainPtr);
    }
    fseek(tmpMainPtr, 0, SEEK_SET);
-   for(i=0; i<mainSize/BLOCK_SIZE; i++){
+   /*for(i=0; i<mainSize/BLOCK_SIZE; i++){
       fread(tmpBuffer, BLOCK_SIZE, 1, tmpMainPtr);
       fwrite(tmpBuffer, BLOCK_SIZE, 1, mainFilePtr);
    }
    if(mainSize%BLOCK_SIZE!=0){
       fread(tmpBuffer, offset%BLOCK_SIZE, 1, tmpMainPtr);
       fwrite(tmpBuffer, offset%BLOCK_SIZE, 1, mainFilePtr);
-   }
+   }*/
    fclose(tmpMainPtr);
    //remove("tmpMain");
 }
@@ -387,6 +387,7 @@ unsigned int obfuscateMOV(){
    insertedBytes=0;
 	nbInstr = mainSize/ARM_INSTRUCTION_SIZE;
    buffer1=malloc(ARM_INSTRUCTION_SIZE);	
+   buffer2=malloc(ARM_INSTRUCTION_SIZE);
    fseek(mainFilePtr, 0, SEEK_SET);
 	for(i=0; i<nbInstr; i++){
 		fread(buffer1, sizeof(int), 1, mainFilePtr);
@@ -402,6 +403,8 @@ unsigned int obfuscateMOV(){
          insertedBytes+=4;
 		}
 	}
+   free(buffer1);
+   free(buffer2);
    return insertedBytes;
 }
 
@@ -456,7 +459,8 @@ int main(int argc, char *argv[]){
       mainAddr=ADDR_ID+mainOff;
       codeLength=0;
       extractMain();
-      obfuscateMOV();
+      printf("extracted main\n");
+      obfuscate();
       if (codeLength!=0){
          updateSct(mainOff, mainAddr);
       }   
