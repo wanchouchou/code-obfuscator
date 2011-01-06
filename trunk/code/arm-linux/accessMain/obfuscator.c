@@ -8,11 +8,13 @@
 
 FILE *exeFilePtr;             // pointer on the executable file
 FILE *tmpFilePtr;             // pointer on the temporary file
-FILE *endFilePtr;             // pointer on the modified file                      
+FILE *endFilePtr;             // pointer on the modified file 
+FILE *mainFilePtr;                     
 unsigned char *tmpBuffer;     // char pointer on the temporary buffer
-unsigned long fileLength;     // length of the executable
+unsigned long fileLength;     // length of the executable in bytes
 unsigned char *strPtr;        // char pointer to verify the section names
-unsigned int codeLength;      // length of the injected code
+unsigned int codeLength;      // length of the injected code in bytes
+unsigned int mainSize;        // size of the main method in bytes
 Elf32_Shdr *shdrPtr[NB_SHDR]; // array of section header poiters
 Elf32_Ehdr elfHdr;            // elf header of the executable
 
@@ -44,6 +46,48 @@ void injectCode(Elf32_Off offset, Elf32_Word *hexcode){
    }
 }
 
+/* inserts code into a file at a given offset */
+void insertInstr(unsigned int *instr, unsigned int offset){
+
+   int i;
+   FILE *tmpMainPtr;
+   tmpMainPtr = fopen("tmpMain","w+b");
+   if(!tmpMainPtr){
+     fprintf(stderr, "Unable to create tmpMain file!\n");
+   }
+   /* copy content to temporary main file */
+   fseek(mainFilePtr, 0, SEEK_SET);
+   for(i=0; i<offset/BLOCK_SIZE; i++){
+      fread(tmpBuffer, BLOCK_SIZE, 1, mainFilePtr);
+      fwrite(tmpBuffer, BLOCK_SIZE, 1, tmpMainPtr);
+   }
+   if(offset%BLOCK_SIZE!=0){
+      fread(tmpBuffer, offset%BLOCK_SIZE, 1, mainFilePtr);
+      fwrite(tmpBuffer, offset%BLOCK_SIZE, 1, tmpMainPtr);
+   }
+   /* copy instruction to main file */
+   fwrite(instr, ARM_INSTRUCTION_SIZE, 1, tmpMainPtr);
+   for(i=0; i<(fileLength-offset)/BLOCK_SIZE; i++){   // copy rest of file
+      fread(tmpBuffer, BLOCK_SIZE, 1, mainFilePtr);
+      fwrite(tmpBuffer, BLOCK_SIZE, 1, tmpMainPtr);
+   }
+   if((fileLength-offset)%BLOCK_SIZE!=0){
+      fread(tmpBuffer, (mainSize-offset)%BLOCK_SIZE, 1, mainFilePtr);
+      fwrite(tmpBuffer, (mainSize-offset)%BLOCK_SIZE, 1, tmpMainPtr);
+   }
+   fseek(tmpMainPtr, 0, SEEK_SET);
+   for(i=0; i<mainSize/BLOCK_SIZE; i++){
+      fread(tmpBuffer, BLOCK_SIZE, 1, tmpMainPtr);
+      fwrite(tmpBuffer, BLOCK_SIZE, 1, mainFilePtr);
+   }
+   if(mainSize%BLOCK_SIZE!=0){
+      fread(tmpBuffer, offset%BLOCK_SIZE, 1, tmpMainPtr);
+      fwrite(tmpBuffer, offset%BLOCK_SIZE, 1, mainFilePtr);
+   }
+   fclose(tmpMainPtr);
+   //remove("tmpMain");
+}
+
 /* updates offsets and pointers */
 void updateFct (unsigned int offset, unsigned int insertOff, unsigned int insertAddr, char jump, int nbEntries){
 	int i;
@@ -59,6 +103,7 @@ void updateFct (unsigned int offset, unsigned int insertOff, unsigned int insert
 		}
 	offset+=jump;
 	}
+   free(buffer);
 }
 
 /* updates offsets and pointers of the .dynsym section */
@@ -109,6 +154,7 @@ void updatePlt (unsigned int offset, unsigned int insertOff, unsigned int insert
 		}
 	offset+=4;
 	}
+   free(buffer);
 } 
 
 /* updates offsets and pointers of the program header */
@@ -136,13 +182,15 @@ void updateShdr(unsigned int insertOff, unsigned int insertAddr){
    
    for(i=SCT_FINI; i<sizeof(shdrNames)/sizeof(int); i++){
       fseek(tmpFilePtr, elfHdr.e_shoff+(i+1)*sizeof(Elf32_Shdr), SEEK_SET);
-      if(shdrPtr[i]->sh_addr>insertAddr){ // increments the address if it after 
-         shdrPtr[i]->sh_addr+=codeLength;
+      if(shdrPtr[i]!=0){
+         if(shdrPtr[i]->sh_addr>insertAddr){ // increments the address if it is after 
+            shdrPtr[i]->sh_addr+=codeLength;
+         }
+         if(shdrPtr[i]->sh_offset>insertOff){
+            shdrPtr[i]->sh_offset+=codeLength;
+         }
+         fwrite(shdrPtr[i], sizeof(Elf32_Shdr), 1, tmpFilePtr);
       }
-      if(shdrPtr[i]->sh_offset>insertOff){
-         shdrPtr[i]->sh_offset+=codeLength;
-      }
-      fwrite(shdrPtr[i], sizeof(Elf32_Shdr), 1, tmpFilePtr);
    }
 }
 
@@ -167,6 +215,7 @@ unsigned int searchMain (){
 		}
 	offset+=4; 
 	}
+   free(buffer);
    return 0;
 }
 
@@ -194,6 +243,7 @@ void updateText (unsigned int offset, unsigned int insertOff, unsigned int inser
 		}
 	offset+=ARM_INSTRUCTION_SIZE;
 	}
+   free(buffer);
 }
 
 
@@ -221,7 +271,15 @@ int prepareFiles(unsigned char *exeFilename){
      fprintf(stderr, "Unable to create end file!\n");
      return 0;
    }
-
+   
+   /* create main file */
+   remove("main");
+   mainFilePtr = fopen("main","w+b");
+   if(!mainFilePtr){
+     fprintf(stderr, "Unable to create main file!\n");
+     return 0;
+   }
+   
    /* get the length of executable file */
    fseek(exeFilePtr, 0, SEEK_END);
    fileLength = ftell(exeFilePtr);
@@ -255,7 +313,7 @@ void copyShdrs(void){
    Elf32_Shdr strtabShdr, tmpShdr;  // string table section header, temporary section header
    Elf32_Word strtabIndex, strtabStart;   // string table index, string table start offset
    int i,j; // iterators to browse the executable
-
+   
    /* fill the structures */
    fseek(tmpFilePtr, 0, SEEK_SET);
    fread(&elfHdr, 1, sizeof(Elf32_Ehdr), tmpFilePtr);
@@ -263,6 +321,8 @@ void copyShdrs(void){
 		fprintf(stderr, "Could not find sections!\n");
 		return;
 	}
+   for(i=0;i<NB_SHDR;i++)
+      shdrPtr[i]=0;
 	fseek(tmpFilePtr, elfHdr.e_shoff+(elfHdr.e_shnum-1)*sizeof(Elf32_Shdr), SEEK_SET);  // read the string table header
    fread(&strtabShdr, sizeof(char), sizeof(Elf32_Shdr), tmpFilePtr); // copy the string table header
    strtabStart=strtabShdr.sh_offset;
@@ -298,39 +358,59 @@ void updateSct(int mainOff, int mainAddr){
 }
 
 /* transforms every CMP rx, #0 instruction into an AND */
-void obfuscateCMP(){
+unsigned int obfuscateCMP(){
 	unsigned int nbInstr;
 	unsigned int i;
 	unsigned int *buffer;
-	unsigned int mainLocation;
    unsigned int tmp;
-	mainLocation = searchMain();
-	nbInstr = ((shdrPtr[SCT_FINI]->sh_offset)-mainLocation)/ARM_INSTRUCTION_SIZE;
-   printf("%x\n", nbInstr);
+	nbInstr = mainSize/ARM_INSTRUCTION_SIZE;
    buffer=malloc(ARM_INSTRUCTION_SIZE);	
+   fseek(mainFilePtr, 0, SEEK_SET);
 	for(i=0; i<nbInstr; i++){
-		fseek(tmpFilePtr, mainLocation, SEEK_SET);
-		fread(buffer, sizeof(int), 1, tmpFilePtr);
-      if((*buffer&0xfff0ffff)==0xe3500000){
-         tmp=0x000f0000&*buffer;
+		fread(buffer, sizeof(int), 1, mainFilePtr);
+      if((*buffer & 0xfff0ffff)==0xe3500000){
+         tmp=0x000f0000 & *buffer;
          *buffer=0xe0000000+tmp+(tmp>>4)+(tmp>>16);
-         printf("%x\n",*buffer);
+         fseek(mainFilePtr, -4, SEEK_CUR);
+         fwrite(buffer, ARM_INSTRUCTION_SIZE, 1, mainFilePtr);
 		}
-	mainLocation+=ARM_INSTRUCTION_SIZE;
 	}
+   return 0;
 }
 
-void obfuscateMOV(){
-   
-
-
-
+unsigned int obfuscateMOV(){
+	unsigned int nbInstr;
+	unsigned int i;
+	unsigned int *buffer1, *buffer2;
+   unsigned int param1, param2, param3;
+   unsigned int insertedBytes;
+   insertedBytes=0;
+	nbInstr = mainSize/ARM_INSTRUCTION_SIZE;
+   buffer1=malloc(ARM_INSTRUCTION_SIZE);	
+   fseek(mainFilePtr, 0, SEEK_SET);
+	for(i=0; i<nbInstr; i++){
+		fread(buffer1, sizeof(int), 1, mainFilePtr);
+      if((*buffer1&0xffff0ff0)==0xe1a00000){
+         param1=0x0000f000 & *buffer1;
+         param2=0x0000000f & *buffer1;
+         param3=0xffff0000 & *buffer1;
+         *buffer1=param3+param1;
+         *buffer2=param3+(param2>>12);
+         fseek(mainFilePtr, -4, SEEK_CUR);
+         fwrite(buffer1, ARM_INSTRUCTION_SIZE, 1, mainFilePtr);
+         insertInstr(buffer2, SEEK_CUR);
+         insertedBytes+=4;
+		}
+	}
+   return insertedBytes;
 }
 
-
-unsigned int obfuscateFct(){
-   obfuscateCMP();
-   return 3;
+unsigned int obfuscate(){
+   unsigned int insertLength;
+   insertLength=0;
+   insertLength += obfuscateCMP();
+   insertLength += obfuscateMOV();
+   return insertLength;
 }
 
 /* close files and delete the temporary file */
@@ -338,6 +418,7 @@ void closeFiles(){
    fclose(exeFilePtr);
    fclose(tmpFilePtr);
    fclose(endFilePtr);
+   fclose(mainFilePtr);
    free(tmpBuffer);
    free(strPtr);
    int i;
@@ -346,6 +427,23 @@ void closeFiles(){
    remove("tmp");
 }
 
+void extractMain(){
+
+   int i;
+   
+   mainSize=shdrPtr[SCT_FINI]->sh_offset-searchMain();
+   printf("fini %x , mainsize %x, searchmain %x\n", shdrPtr[SCT_FINI]->sh_offset, mainSize, searchMain());
+   /* copy content to temporary file */
+   fseek(exeFilePtr, searchMain(), SEEK_SET);
+   for(i=0; i<mainSize/BLOCK_SIZE; i++){
+      fread(tmpBuffer, BLOCK_SIZE, 1, exeFilePtr);
+      fwrite(tmpBuffer, BLOCK_SIZE, 1, mainFilePtr);
+   }
+   if(mainSize%BLOCK_SIZE!=0){
+      fread(tmpBuffer, mainSize%BLOCK_SIZE, 1, exeFilePtr);
+      fwrite(tmpBuffer, mainSize%BLOCK_SIZE, 1, mainFilePtr);
+   }
+}
 
 int main(int argc, char *argv[]){
 
@@ -353,12 +451,15 @@ int main(int argc, char *argv[]){
    int mainOff, mainAddr;
 
    if(prepareFiles(argv[1])){
-      copyShdrs();
+      copyShdrs(); 
       mainOff=searchMain();
       mainAddr=ADDR_ID+mainOff;
-      codeLength=16;
-      if (codeLength!=0)
+      codeLength=0;
+      extractMain();
+      obfuscateMOV();
+      if (codeLength!=0){
          updateSct(mainOff, mainAddr);
+      }   
       closeFiles();
       return 0;
    }
