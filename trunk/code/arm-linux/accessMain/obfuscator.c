@@ -395,7 +395,7 @@ unsigned int obfuscateMOV(){
          param2=0x0000000f & *buffer1;
          param3=0xffff0000 & *buffer1;
          *buffer1=param3+param1;
-         *buffer2=param3+(param2>>12);
+         *buffer2=param3+(param2<<12);
          fseek(mainFilePtr, -4, SEEK_CUR);
          fwrite(buffer1, ARM_INSTRUCTION_SIZE, 1, mainFilePtr);
          insertInstr(buffer2, SEEK_CUR);
