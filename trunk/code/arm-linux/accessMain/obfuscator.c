@@ -47,7 +47,7 @@ void injectCode(Elf32_Off offset, Elf32_Word *hexcode){
 }
 
 /* inserts code into a file at a given offset */
-void insertInstr(unsigned int *instr, unsigned int offset){
+void insertInstr(unsigned int *instr, unsigned int offset, unsigned int codeSize){
 
    int i;
    FILE *tmpMainPtr;
@@ -66,7 +66,7 @@ void insertInstr(unsigned int *instr, unsigned int offset){
       fwrite(tmpBuffer, offset%BLOCK_SIZE, 1, tmpMainPtr);
    }
    /* copy instruction */
-   fwrite(instr, ARM_INSTRUCTION_SIZE, 1, tmpMainPtr);
+   fwrite(instr, codeSize, 1, tmpMainPtr);
 
    /* copy rest of file */
    for(i=0; i<(mainSize-offset)/BLOCK_SIZE; i++){  
@@ -77,7 +77,7 @@ void insertInstr(unsigned int *instr, unsigned int offset){
       fread(tmpBuffer, (mainSize-offset)%BLOCK_SIZE, 1, mainFilePtr);
       fwrite(tmpBuffer, (mainSize-offset)%BLOCK_SIZE, 1, tmpMainPtr);
    }
-   mainSize+=ARM_INSTRUCTION_SIZE;
+   mainSize+=codeSize;
 
    fseek(tmpMainPtr, 0, SEEK_SET);
    fseek(mainFilePtr, 0, SEEK_SET);
@@ -384,6 +384,7 @@ unsigned int obfuscateCMP(){
    return 0;
 }
 
+/* replace MOV instructions with PUSH, POP */
 unsigned int obfuscateMOV(){
 	unsigned int nbInstr;
 	unsigned int i;
@@ -407,7 +408,7 @@ unsigned int obfuscateMOV(){
          *buffer2=0xe49d0000+(param2<<12);
          fseek(mainFilePtr, -4, SEEK_CUR);
          fwrite(buffer1, ARM_INSTRUCTION_SIZE, 1, mainFilePtr);
-         insertInstr(buffer2, position);
+         insertInstr(buffer2, position, ARM_INSTRUCTION_SIZE);
          insertedBytes+=4;
 		}
 	}
@@ -416,11 +417,34 @@ unsigned int obfuscateMOV(){
    return insertedBytes;
 }
 
+/**/
+unsigned int obfIncPC(){
+	unsigned int nbInstr;
+	unsigned int *buffer1, *buffer2;
+   unsigned int position1, position2;
+	nbInstr = mainSize/ARM_INSTRUCTION_SIZE;
+   position1=2*ARM_INSTRUCTION_SIZE;
+   position2=mainSize+6-(2*ARM_INSTRUCTION_SIZE);
+   printf("pos2: %x\n", position2);
+   buffer1=malloc(ARM_INSTRUCTION_SIZE);	
+   buffer2=malloc(ARM_INSTRUCTION_SIZE/2);
+   *buffer1=0xe28ff002;
+   *buffer2=0x0000;
+   insertInstr(buffer1, position1, ARM_INSTRUCTION_SIZE);
+   insertInstr(buffer2, position1 + ARM_INSTRUCTION_SIZE, ARM_INSTRUCTION_SIZE/2);
+   insertInstr(buffer1, position2, ARM_INSTRUCTION_SIZE);
+   insertInstr(buffer2, position2 + ARM_INSTRUCTION_SIZE, ARM_INSTRUCTION_SIZE/2); 
+   free(buffer1);
+   free(buffer2);
+   return 3*ARM_INSTRUCTION_SIZE;   
+}
+
 unsigned int obfuscate(){
    unsigned int insertLength;
    insertLength=0;
    insertLength += obfuscateCMP();
    insertLength += obfuscateMOV();
+   insertLength += obfIncPC();
    return insertLength;
 }
 
