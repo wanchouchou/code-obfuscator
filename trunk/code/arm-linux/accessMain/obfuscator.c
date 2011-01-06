@@ -58,6 +58,7 @@ void insertInstr(unsigned int *instr, unsigned int offset){
    /* copy content to temporary main file */
    fseek(mainFilePtr, 0, SEEK_SET);
    for(i=0; i<offset/BLOCK_SIZE; i++){
+      printf("passe\n");
       fread(tmpBuffer, BLOCK_SIZE, 1, mainFilePtr);
       fwrite(tmpBuffer, BLOCK_SIZE, 1, tmpMainPtr);
    }
