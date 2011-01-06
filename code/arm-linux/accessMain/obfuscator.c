@@ -65,13 +65,15 @@ void insertInstr(unsigned int *instr, unsigned int offset){
       fread(tmpBuffer, offset%BLOCK_SIZE, 1, mainFilePtr);
       fwrite(tmpBuffer, offset%BLOCK_SIZE, 1, tmpMainPtr);
    }
-   /* copy instruction to main file */
+   /* copy instruction */
    fwrite(instr, ARM_INSTRUCTION_SIZE, 1, tmpMainPtr);
-   for(i=0; i<(fileLength-offset)/BLOCK_SIZE; i++){   // copy rest of file
+
+   /* copy rest of file */
+   for(i=0; i<(mainSize-offset)/BLOCK_SIZE; i++){  
       fread(tmpBuffer, BLOCK_SIZE, 1, mainFilePtr);
       fwrite(tmpBuffer, BLOCK_SIZE, 1, tmpMainPtr);
    }
-   if((fileLength-offset)%BLOCK_SIZE!=0){
+   if((mainSize-offset)%BLOCK_SIZE!=0){
       fread(tmpBuffer, (mainSize-offset)%BLOCK_SIZE, 1, mainFilePtr);
       fwrite(tmpBuffer, (mainSize-offset)%BLOCK_SIZE, 1, tmpMainPtr);
    }
