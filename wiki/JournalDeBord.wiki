@@ -69,3 +69,12 @@
 
 ==13-14 décembre 2010==
   * Code: modifications des adresses et offsets situés dans chaque section
+
+==19-23 décembre 2010==
+  * Code: insertion d'instructions fonctionne 
+
+== 3-6 janvier 2010==
+  * Code: méthodes d'obfuscation
+
+== 10-11 janvier 2010==
+  * Code: méthodes d'obfuscation
