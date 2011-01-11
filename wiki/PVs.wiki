@@ -6,4 +6,5 @@
   # [https://code-obfuscator.googlecode.com/svn/trunk/pv_seance6.pdf Séance du 24.11.2010]
   # [https://code-obfuscator.googlecode.com/svn/trunk/pv_seance7.pdf Séance du 01.12.2010]
   # [https://code-obfuscator.googlecode.com/svn/trunk/pv_seance8.pdf Séance du 15.12.2010]
-  # [https://code-obfuscator.googlecode.com/svn/trunk/pv_seance9.pdf Séance du 15.12.2010]
+  # [https://code-obfuscator.googlecode.com/svn/trunk/pv_seance9.pdf Séance du 22.12.2010]
+  # [https://code-obfuscator.googlecode.com/svn/trunk/pv_seance10.pdf Séance du 11.1.2011]
