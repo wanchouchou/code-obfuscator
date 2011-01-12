@@ -1,0 +1,119 @@
+
+program-ok:     file format elf32-littlearm
+
+Disassembly of section .text:
+
+00008344 <_start>:
+    8344:	e3a0b000 	mov	fp, #0	; 0x0
+    8348:	e3a0e000 	mov	lr, #0	; 0x0
+    834c:	e49d1004 	pop	{r1}		; (ldr r1, [sp], #4)
+    8350:	e1a0200d 	mov	r2, sp
+    8354:	e52d2004 	push	{r2}		; (str r2, [sp, #-4]!)
+    8358:	e52d0004 	push	{r0}		; (str r0, [sp, #-4]!)
+    835c:	e59fc010 	ldr	ip, [pc, #16]	; 8374 <_start+0x30>
+    8360:	e52dc004 	push	{ip}		; (str ip, [sp, #-4]!)
+    8364:	e59f000c 	ldr	r0, [pc, #12]	; 8378 <_start+0x34>
+    8368:	e59f300c 	ldr	r3, [pc, #12]	; 837c <_start+0x38>
+    836c:	eaffffeb 	b	8320 <_init+0x24>
+    8370:	ebffffed 	bl	832c <_init+0x30>
+    8374:	0000843c 	andeq	r8, r0, ip, lsr r4
+    8378:	00008410 	andeq	r8, r0, r0, lsl r4
+    837c:	000082fc 	strdeq	r8, [r0], -ip
+
+00008380 <_call_via_r0>:
+    8380:	4700      	bx	r0
+    8382:	46c0      	nop			(mov r8, r8)
+
+00008384 <_call_via_r1>:
+    8384:	4708      	bx	r1
+    8386:	46c0      	nop			(mov r8, r8)
+
+00008388 <_call_via_r2>:
+    8388:	4710      	bx	r2
+    838a:	46c0      	nop			(mov r8, r8)
+
+0000838c <_call_via_r3>:
+    838c:	4718      	bx	r3
+    838e:	46c0      	nop			(mov r8, r8)
+
+00008390 <_call_via_r4>:
+    8390:	4720      	bx	r4
+    8392:	46c0      	nop			(mov r8, r8)
+
+00008394 <_call_via_r5>:
+    8394:	4728      	bx	r5
+    8396:	46c0      	nop			(mov r8, r8)
+
+00008398 <_call_via_r6>:
+    8398:	4730      	bx	r6
+    839a:	46c0      	nop			(mov r8, r8)
+
+0000839c <_call_via_r7>:
+    839c:	4738      	bx	r7
+    839e:	46c0      	nop			(mov r8, r8)
+
+000083a0 <_call_via_r8>:
+    83a0:	4740      	bx	r8
+    83a2:	46c0      	nop			(mov r8, r8)
+
+000083a4 <_call_via_r9>:
+    83a4:	4748      	bx	r9
+    83a6:	46c0      	nop			(mov r8, r8)
+
+000083a8 <_call_via_sl>:
+    83a8:	4750      	bx	sl
+    83aa:	46c0      	nop			(mov r8, r8)
+
+000083ac <_call_via_fp>:
+    83ac:	4758      	bx	fp
+    83ae:	46c0      	nop			(mov r8, r8)
+
+000083b0 <_call_via_ip>:
+    83b0:	4760      	bx	ip
+    83b2:	46c0      	nop			(mov r8, r8)
+
+000083b4 <_call_via_sp>:
+    83b4:	4768      	bx	sp
+    83b6:	46c0      	nop			(mov r8, r8)
+
+000083b8 <_call_via_lr>:
+    83b8:	4770      	bx	lr
+    83ba:	46c0      	nop			(mov r8, r8)
+
+000083bc <__do_global_dtors_aux>:
+    83bc:	e59f2010 	ldr	r2, [pc, #16]	; 83d4 <__do_global_dtors_aux+0x18>
+    83c0:	e5d23000 	ldrb	r3, [r2]
+    83c4:	e3530000 	cmp	r3, #0	; 0x0
+    83c8:	02833001 	addeq	r3, r3, #1	; 0x1
+    83cc:	05c23000 	strbeq	r3, [r2]
+    83d0:	e12fff1e 	bx	lr
+    83d4:	00010540 	.word	0x00010540
+
+000083d8 <frame_dummy>:
+    83d8:	e59f0028 	ldr	r0, [pc, #40]	; 8408 <frame_dummy+0x30>
+    83dc:	e52de004 	push	{lr}		; (str lr, [sp, #-4]!)
+    83e0:	e5903000 	ldr	r3, [r0]
+    83e4:	e24dd004 	sub	sp, sp, #4	; 0x4
+    83e8:	e3530000 	cmp	r3, #0	; 0x0
+    83ec:	0a000003 	beq	8400 <frame_dummy+0x28>
+    83f0:	e59f3014 	ldr	r3, [pc, #20]	; 840c <frame_dummy+0x34>
+    83f4:	e3530000 	cmp	r3, #0	; 0x0
+    83f8:	0a000000 	beq	8400 <frame_dummy+0x28>
+    83fc:	e12fff33 	blx	r3
+    8400:	e28dd004 	add	sp, sp, #4	; 0x4
+    8404:	e8bd8000 	pop	{pc}
+    8408:	0001045c 	.word	0x0001045c
+    840c:	00000000 	.word	0x00000000
+
+00008410 <main>:
+    8410:	e1a0c00d 	mov	ip, sp
+    8414:	e92dd800 	push	{fp, ip, lr, pc}
+    8418:	08e24cb0 	stmiaeq	r2!, {r4, r5, r7, sl, fp, lr}^
+    841c:	10e24dd0 	ldrdne	r4, [r2], #208
+    8420:	14e50b00 	strbtne	r0, [r5], #2816
+    8424:	08e50b10 	stmiaeq	r5!, {r4, r8, r9, fp}^
+    8428:	c1e59f00 	mvngt	r9, r0, lsl #30
+    842c:	0cebffff 	stcleq	15, cr15, [fp], #1020
+    8430:	e24bd08e 	sub	sp, fp, #142	; 0x8e
+    8434:	e89da800 	ldm	sp, {fp, sp, pc}
+    8438:	0000844c 	.word	0x0000844c
