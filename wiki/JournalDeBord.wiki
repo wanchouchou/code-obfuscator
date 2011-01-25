@@ -66,15 +66,27 @@
 ==05-10 décembre 2010==
   * Etablissement d'une structure du fichier ELF
   * Modifications du code: sauvegarde des entêtes de sections dans des structures
+  * Rédaction du rapport
 
 ==13-14 décembre 2010==
   * Code: modifications des adresses et offsets situés dans chaque section
+  * Rédaction du rapport
 
 ==19-23 décembre 2010==
   * Code: insertion d'instructions fonctionne 
+  * Rédaction du rapport
 
-== 3-6 janvier 2010==
+== 3-6 janvier 2011==
   * Code: méthodes d'obfuscation
+  * Rédaction du rapport
 
-== 10-11 janvier 2010==
-  * Code: méthodes d'obfuscation
+== 10-11 janvier 2011==
+  * Code: méthodes d'obfuscation: obfIncPC()
+  * Rédaction du rapport
+
+== 17-22 janvier 2011==
+  * Code: correction méthodes d'obfuscation, obfuscateMOV,obfuscateCMP
+
+== 23-24 janvier 2010==
+  * Code: continuation, méthodes d'obfuscation
+  * Rédaction du rapport
