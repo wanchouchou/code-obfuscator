@@ -8,3 +8,4 @@
   # [https://code-obfuscator.googlecode.com/svn/trunk/pv_seance8.pdf Séance du 15.12.2010]
   # [https://code-obfuscator.googlecode.com/svn/trunk/pv_seance9.pdf Séance du 22.12.2010]
   # [https://code-obfuscator.googlecode.com/svn/trunk/pv_seance10.pdf Séance du 12.1.2011]
+  # [https://code-obfuscator.googlecode.com/svn/trunk/pv_seance11.pdf Séance du 19.1.2011]
