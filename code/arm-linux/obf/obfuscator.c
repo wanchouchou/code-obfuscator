@@ -118,9 +118,6 @@ void copyTmp(){
    }
 }
 
-
-
-
 /* updates offsets and pointers */
 void updateFct (unsigned int offset, char jump, int nbEntries){
 	int i;
@@ -419,11 +416,11 @@ void updateSct(){
 
 /* transforms every CMP rx, #0 instruction into an AND */
 unsigned int obfuscateCMP(){
-	unsigned int nbInstr;
-	unsigned int i;
-	unsigned int *buffer;
+   unsigned int nbInstr;
+   unsigned int i;
+   unsigned int *buffer;
    unsigned int tmp;
-	nbInstr = mainSize/ARM_INSTRUCTION_SIZE;
+   nbInstr = mainSize/ARM_INSTRUCTION_SIZE;
    buffer=malloc(ARM_INSTRUCTION_SIZE);	
    fseek(mainFilePtr, 0, SEEK_SET);
 	for(i=0; i<nbInstr; i++){
